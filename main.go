@@ -12,11 +12,12 @@ import (
 var riemannAddress = flag.String("riemann_address", "localhost:5555", "specify the riemann server location")
 var sampleInterval = flag.Duration("interval", 5*time.Second, "Interval between sampling (default: 5s)")
 
-func pushToRiemann(r *goryman.GorymanClient, service string, metric int, tags []string) {
+func pushToRiemann(r *goryman.GorymanClient, service string, metric int, host string, tags []string) {
     err := r.SendEvent(&goryman.Event{
         Service: service,
         Metric:  metric,
         Tags:    tags,
+        Host:    host,
     })
     if err != nil {
         glog.Fatalf("unable to write to riemann: %s", err)
@@ -53,9 +54,9 @@ func main() {
             // Get stats
             // Push into riemann
             for _, container := range info.Containers {
-                pushToRiemann(r, fmt.Sprintf("Cpu.Load %s", container.Name), int(container.Stats[0].Cpu.Load), []string{})
-                pushToRiemann(r, fmt.Sprintf("Cpu.Usage.Total %s", container.Name), int(container.Stats[0].Cpu.Usage.Total), []string{})
-                pushToRiemann(r, fmt.Sprintf("Memory.Usage %s", container.Name), int(container.Stats[0].Memory.Usage), []string{})
+                pushToRiemann(r, fmt.Sprintf("Cpu.Load %s", container.Name), int(container.Stats[0].Cpu.Load), container.Hostname, []string{})
+                pushToRiemann(r, fmt.Sprintf("Cpu.Usage.Total %s", container.Name), int(container.Stats[0].Cpu.Usage.Total), container.Hostname, []string{})
+                pushToRiemann(r, fmt.Sprintf("Memory.Usage %s", container.Name), int(container.Stats[0].Memory.Usage), container.Hostname, []string{})
             }
         }
     }
