@@ -5,26 +5,26 @@ import (
     "fmt"
     "io/ioutil"
     "os"
+    "flag"
 
     "github.com/golang/glog"
 )
 
-// While updating this, also update heapster/deploy/Dockerfile.
-const HostsFile = "etc/hosts"
+var HostsFile = flag.String("hosts_file", "etc/hosts", "specify the cadvisors location")
 
 type ExternalSource struct {
     cadvisor *cadvisorSource
 }
 
 func (self *ExternalSource) getCadvisorHosts() (*CadvisorHosts, error) {
-    fi, err := os.Stat(HostsFile)
+    fi, err := os.Stat(*HostsFile)
     if err != nil {
         return nil, err
     }
     if fi.Size() == 0 {
         return &CadvisorHosts{}, nil
     }
-    contents, err := ioutil.ReadFile(HostsFile)
+    contents, err := ioutil.ReadFile(*HostsFile)
     if err != nil {
         return nil, err
     }
@@ -55,8 +55,8 @@ func (self *ExternalSource) GetInfo() (ContainerData, error) {
 }
 
 func newExternalSource() (Source, error) {
-    if _, err := os.Stat(HostsFile); err != nil {
-        return nil, fmt.Errorf("Cannot stat hosts_file %s. Error: %s", HostsFile, err)
+    if _, err := os.Stat(*HostsFile); err != nil {
+        return nil, fmt.Errorf("Cannot stat hosts_file %s. Error: %s", *HostsFile, err)
     }
     cadvisorSource := newCadvisorSource()
     return &ExternalSource{
